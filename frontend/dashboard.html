@@ -1,0 +1,85 @@
+<!-- frontend/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice Dashboard</title>
+  <script>
+    async function fetchInvoices() {
+      const response = await fetch("/invoices");
+      const data = await response.json();
+      const tbody = document.getElementById("invoice-body");
+      tbody.innerHTML = "";
+
+      data.forEach((invoice) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${invoice.filename ?? ''}</td>
+          <td>${invoice.invoice_number ?? ''}</td>
+          <td>${invoice.invoice_date ?? ''}</td>
+          <td>${invoice.supplier_name ?? ''}</td>
+          <td>${invoice.total_ht ?? ''}</td>
+          <td>${invoice.tva ?? ''}</td>
+          <td>${invoice.total_ttc ?? ''}</td>
+          <td>${invoice.created_at ?? ''}</td>
+          <td>
+            <button onclick="window.location='/edit/' + ${invoice.id}">Edit</button>
+            <button onclick="deleteInvoice(${invoice.id})">Delete</button>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    async function updateInvoice(id, btn) {
+      const row = btn.closest("tr");
+      const cells = row.querySelectorAll("[contenteditable]");
+      const payload = {};
+
+      cells.forEach((cell) => {
+        payload[cell.dataset.field] = cell.textContent.trim();
+      });
+
+      const res = await fetch(`/invoices/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) alert("Invoice updated!");
+      else alert("Error updating invoice.");
+    }
+
+    async function deleteInvoice(id) {
+      const res = await fetch(`/invoices/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        alert("Invoice deleted!");
+        fetchInvoices();
+      } else alert("Error deleting invoice.");
+    }
+
+    window.onload = fetchInvoices;
+  </script>
+</head>
+<body>
+  <h1>Invoice Dashboard</h1>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Filename</th>
+        <th>Invoice Number</th>
+        <th>Invoice Date</th>
+        <th>Supplier Name</th>
+        <th>Total HT</th>
+        <th>TVA</th>
+        <th>Total TTC</th>
+        <th>Created At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="invoice-body"></tbody>
+  </table>
+</body>
+</html>
