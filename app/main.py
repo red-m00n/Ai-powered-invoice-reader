@@ -12,10 +12,10 @@ import os
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
-@app.get("/", response_class=HTMLResponse)
-def serve_upload():
-    with open("frontend/upload.html", "r") as f:
-        return HTMLResponse(f.read())
+# @app.get("/", response_class=HTMLResponse)
+# def serve_upload():
+#     with open("frontend/upload.html", "r") as f:
+#         return HTMLResponse(f.read())
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def serve_dashboard():
@@ -36,9 +36,6 @@ async def upload_invoice(file: UploadFile = File(...), db: Session = Depends(get
     file_location = f"uploads/{file.filename}"
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
-
-
-
 
 
     try:
@@ -95,3 +92,5 @@ async def edit_invoice_submit(invoice_id: int, request: Request, db: Session = D
             setattr(invoice, field, form[field])
     db.commit()
     return RedirectResponse(url="/dashboard", status_code=303)
+
+
