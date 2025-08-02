@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileText, CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 
 const Index = () => {
@@ -14,6 +15,7 @@ const Index = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isComplete, setIsComplete] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -40,32 +42,63 @@ const Index = () => {
     formData.append("file", file);
 
     try {
-      const response = await fetch("/upload", {
-        method: "POST",
-        body: formData,
+      // Create XMLHttpRequest to track upload progress
+      const xhr = new XMLHttpRequest();
+      
+      // Track upload progress
+      xhr.upload.addEventListener('progress', (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded / event.total) * 90); // Max 90% for upload
+          setUploadProgress(progress);
+        }
       });
-      setUploadProgress(100);
-      if (response.ok) {
-        setIsComplete(true);
-        toast({
-          title: "Success!",
-          description: "Invoice processed and saved successfully.",
-        });
-      } else {
-        const data = await response.json();
+
+      // Handle response
+      xhr.addEventListener('load', () => {
+        if (xhr.status === 200) {
+          // Simulate processing time for the last 10%
+          setUploadProgress(90);
+          setTimeout(() => {
+            setUploadProgress(100);
+            setTimeout(() => {
+              setIsComplete(true);
+              toast({
+                title: "Success!",
+                description: "Invoice processed and saved successfully.",
+              });
+              setIsUploading(false);
+            }, 500);
+          }, 1000);
+        } else {
+          toast({
+            title: "Upload failed",
+            description: "An error occurred during upload.",
+            variant: "destructive",
+          });
+          setIsUploading(false);
+        }
+      });
+
+      // Handle errors
+      xhr.addEventListener('error', () => {
         toast({
           title: "Upload failed",
-          description: data.error || "An error occurred during upload.",
+          description: "Network error occurred during upload.",
           variant: "destructive",
         });
-      }
+        setIsUploading(false);
+      });
+
+      // Open and send request
+      xhr.open('POST', 'http://localhost:8000/upload');
+      xhr.send(formData);
+
     } catch (error) {
       toast({
         title: "Upload failed",
         description: (error as Error).message,
         variant: "destructive",
       });
-    } finally {
       setIsUploading(false);
     }
   };
@@ -75,6 +108,10 @@ const Index = () => {
     setUploadProgress(0);
     setIsComplete(false);
     setIsUploading(false);
+  };
+
+  const goToDashboard = () => {
+    navigate('/dashboard');
   };
 
   return (
@@ -198,7 +235,7 @@ const Index = () => {
                       <Button onClick={resetForm} variant="outline" className="font-semibold">
                         Upload Another Invoice
                       </Button>
-                      <Button className="gradient-primary font-semibold">
+                      <Button onClick={goToDashboard} className="gradient-primary font-semibold">
                         View in Dashboard
                       </Button>
                     </div>

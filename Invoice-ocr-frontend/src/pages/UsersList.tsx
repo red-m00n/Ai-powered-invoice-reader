@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Search, UserPlus, Mail, Shield, Calendar, MoreVertical } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 
 interface User {
@@ -23,6 +24,7 @@ const UsersList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Fetch users from backend
   useEffect(() => {
@@ -72,6 +74,10 @@ const UsersList = () => {
       title: "Edit user",
       description: "Edit user modal would open here in a real application.",
     });
+  };
+
+  const handleAddNewUser = () => {
+    navigate('/users');
   };
 
   const getRoleColor = (role: string) => {
@@ -127,7 +133,7 @@ const UsersList = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="gradient-primary shadow-primary hover:shadow-glow transition-all duration-300">
+              <Button onClick={handleAddNewUser} className="gradient-primary shadow-primary hover:shadow-glow transition-all duration-300">
                 <UserPlus className="w-5 h-5 mr-2" />
                 Add New User
               </Button>
