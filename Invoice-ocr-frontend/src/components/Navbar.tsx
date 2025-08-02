@@ -21,6 +21,7 @@ const Navbar = () => {
   };
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const isAdmin = user.role === "admin";
 
   return (
     <nav className="border-b bg-card/50 backdrop-blur-md border-border/50 sticky top-0 z-50">
@@ -67,35 +68,40 @@ const Navbar = () => {
                 </Button>
               </Link>
               
-              <Link to="/users">
-                <Button 
-                  variant={isActive("/users") ? "default" : "ghost"}
-                  size="lg"
-                  className={`flex items-center space-x-2 font-medium transition-all duration-300 ${
-                    isActive("/users") 
-                      ? "gradient-primary shadow-primary text-white" 
-                      : "hover:bg-primary/10 hover:text-primary"
-                  }`}
-                >
-                  <Users className="w-5 h-5" />
-                  <span>Create User</span>
-                </Button>
-              </Link>
+              {/* Admin-only features */}
+              {isAdmin && (
+                <>
+                  <Link to="/users">
+                    <Button 
+                      variant={isActive("/users") ? "default" : "ghost"}
+                      size="lg"
+                      className={`flex items-center space-x-2 font-medium transition-all duration-300 ${
+                        isActive("/users") 
+                          ? "gradient-primary shadow-primary text-white" 
+                          : "hover:bg-primary/10 hover:text-primary"
+                      }`}
+                    >
+                      <Users className="w-5 h-5" />
+                      <span>Create User</span>
+                    </Button>
+                  </Link>
 
-              <Link to="/users-list">
-                <Button 
-                  variant={isActive("/users-list") ? "default" : "ghost"}
-                  size="lg"
-                  className={`flex items-center space-x-2 font-medium transition-all duration-300 ${
-                    isActive("/users-list") 
-                      ? "gradient-primary shadow-primary text-white" 
-                      : "hover:bg-primary/10 hover:text-primary"
-                  }`}
-                >
-                  <UserCheck className="w-5 h-5" />
-                  <span>Users List</span>
-                </Button>
-              </Link>
+                  <Link to="/users-list">
+                    <Button 
+                      variant={isActive("/users-list") ? "default" : "ghost"}
+                      size="lg"
+                      className={`flex items-center space-x-2 font-medium transition-all duration-300 ${
+                        isActive("/users-list") 
+                          ? "gradient-primary shadow-primary text-white" 
+                          : "hover:bg-primary/10 hover:text-primary"
+                      }`}
+                    >
+                      <UserCheck className="w-5 h-5" />
+                      <span>Users List</span>
+                    </Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 

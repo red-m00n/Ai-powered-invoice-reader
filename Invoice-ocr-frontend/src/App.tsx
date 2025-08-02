@@ -10,6 +10,7 @@ import Users from "./pages/Users";
 import UsersList from "./pages/UsersList";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminRoute from "./components/AdminRoute";
 
 // Create a new QueryClient instance with default options
 const queryClient = new QueryClient({
@@ -42,12 +43,16 @@ const App = () => (
           } />
           <Route path="/users" element={
             <ProtectedRoute>
-              <Users />
+              <AdminRoute>
+                <Users />
+              </AdminRoute>
             </ProtectedRoute>
           } />
           <Route path="/users-list" element={
             <ProtectedRoute>
-              <UsersList />
+              <AdminRoute>
+                <UsersList />
+              </AdminRoute>
             </ProtectedRoute>
           } />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

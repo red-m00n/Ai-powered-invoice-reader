@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,67 +10,51 @@ import { Edit, Trash2, Search, UserPlus, Mail, Shield, Calendar, MoreVertical } 
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 
-// Mock data - replace with real data from your backend
-const mockUsers = [
-  {
-    id: 1,
-    fullName: "John Doe",
-    email: "john.doe@company.com",
-    role: "Admin",
-    status: "Active",
-    avatar: "",
-    createdAt: "2024-01-15",
-    lastLogin: "2024-01-20 10:30:00"
-  },
-  {
-    id: 2,
-    fullName: "Jane Smith",
-    email: "jane.smith@company.com",
-    role: "User",
-    status: "Active",
-    avatar: "",
-    createdAt: "2024-01-16",
-    lastLogin: "2024-01-19 14:22:00"
-  },
-  {
-    id: 3,
-    fullName: "Mike Johnson",
-    email: "mike.johnson@company.com",
-    role: "User",
-    status: "Inactive",
-    avatar: "",
-    createdAt: "2024-01-17",
-    lastLogin: "2024-01-18 09:15:00"
-  },
-  {
-    id: 4,
-    fullName: "Sarah Wilson",
-    email: "sarah.wilson@company.com",
-    role: "Manager",
-    status: "Active",
-    avatar: "",
-    createdAt: "2024-01-18",
-    lastLogin: "2024-01-20 16:45:00"
-  },
-  {
-    id: 5,
-    fullName: "Alex Brown",
-    email: "alex.brown@company.com",
-    role: "User",
-    status: "Active",
-    avatar: "",
-    createdAt: "2024-01-19",
-    lastLogin: "Never"
-  }
-];
+interface User {
+  id: number;
+  full_name: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
 
 const UsersList = () => {
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  // Fetch users from backend
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/users");
+        if (response.ok) {
+          const data = await response.json();
+          setUsers(data);
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to fetch users",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch users",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [toast]);
+
   const filteredUsers = users.filter(user =>
-    user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -90,24 +74,13 @@ const UsersList = () => {
     });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-success/10 text-success border-success/20";
-      case "Inactive":
-        return "bg-warning/10 text-warning border-warning/20";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
-  };
-
   const getRoleColor = (role: string) => {
-    switch (role) {
-      case "Admin":
+    switch (role.toLowerCase()) {
+      case "admin":
         return "bg-danger/10 text-danger border-danger/20";
-      case "Manager":
+      case "manager":
         return "bg-primary/10 text-primary border-primary/20";
-      case "User":
+      case "user":
         return "bg-secondary/10 text-secondary border-secondary/20";
       default:
         return "bg-muted text-muted-foreground";
@@ -117,6 +90,25 @@ const UsersList = () => {
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
   };
+
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background-tertiary">
+        <Navbar />
+        <div className="container mx-auto px-6 py-12">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-secondary to-background-tertiary">
@@ -143,7 +135,7 @@ const UsersList = () => {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid md:grid-cols-4 gap-6 animate-slide-up">
+          <div className="grid md:grid-cols-3 gap-6 animate-slide-up">
             {[
               {
                 title: "Total Users",
@@ -152,22 +144,16 @@ const UsersList = () => {
                 color: "from-primary to-primary-variant"
               },
               {
-                title: "Active Users",
-                value: users.filter(u => u.status === "Active").length,
-                icon: "✅",
-                color: "from-success to-green-400"
-              },
-              {
-                title: "Inactive Users",
-                value: users.filter(u => u.status === "Inactive").length,
-                icon: "⏸️",
-                color: "from-warning to-orange-400"
-              },
-              {
                 title: "Admins",
-                value: users.filter(u => u.role === "Admin").length,
+                value: users.filter(u => u.role.toLowerCase() === "admin").length,
                 icon: "👑",
                 color: "from-danger to-red-400"
+              },
+              {
+                title: "Regular Users",
+                value: users.filter(u => u.role.toLowerCase() === "user").length,
+                icon: "👤",
+                color: "from-secondary to-blue-400"
               }
             ].map((stat, index) => (
               <Card key={index} className="hover-lift border-0 gradient-card">
@@ -213,9 +199,7 @@ const UsersList = () => {
                       <TableRow className="border-border/50 hover:bg-transparent">
                         <TableHead className="font-semibold text-foreground">User</TableHead>
                         <TableHead className="font-semibold text-foreground">Role</TableHead>
-                        <TableHead className="font-semibold text-foreground">Status</TableHead>
                         <TableHead className="font-semibold text-foreground">Created</TableHead>
-                        <TableHead className="font-semibold text-foreground">Last Login</TableHead>
                         <TableHead className="text-center font-semibold text-foreground">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -225,13 +209,13 @@ const UsersList = () => {
                           <TableCell>
                             <div className="flex items-center gap-4">
                               <Avatar className="h-12 w-12 border-2 border-primary/20">
-                                <AvatarImage src={user.avatar} alt={user.fullName} />
+                                <AvatarImage src="" alt={user.full_name} />
                                 <AvatarFallback className="gradient-primary text-white font-semibold">
-                                  {getInitials(user.fullName)}
+                                  {getInitials(user.full_name)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
-                                <p className="font-semibold text-foreground">{user.fullName}</p>
+                                <p className="font-semibold text-foreground">{user.full_name}</p>
                                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                   <Mail className="w-4 h-4" />
                                   {user.email}
@@ -246,18 +230,10 @@ const UsersList = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant="outline" className={`${getStatusColor(user.status)} border font-medium`}>
-                              {user.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
                             <div className="flex items-center gap-2 text-muted-foreground">
                               <Calendar className="w-4 h-4" />
-                              {user.createdAt}
+                              {formatDate(user.created_at)}
                             </div>
-                          </TableCell>
-                          <TableCell className="font-mono text-sm">
-                            {user.lastLogin}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center justify-center gap-2">
@@ -284,7 +260,7 @@ const UsersList = () => {
                                   <AlertDialogHeader>
                                     <AlertDialogTitle className="text-xl font-display">Delete User</AlertDialogTitle>
                                     <AlertDialogDescription className="text-base">
-                                      Are you sure you want to delete <strong>{user.fullName}</strong>? 
+                                      Are you sure you want to delete <strong>{user.full_name}</strong>? 
                                       This action cannot be undone and will remove all user data.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>

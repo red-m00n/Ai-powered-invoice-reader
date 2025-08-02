@@ -129,6 +129,21 @@ async def get_current_user(token: str, db: Session = Depends(get_db)):
         "role": user.role
     }
 
+# API: Get all users (admin only)
+@app.get("/users")
+def get_all_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return [
+        {
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "role": user.role,
+            "created_at": user.created_at.isoformat() if user.created_at else None
+        }
+        for user in users
+    ]
+
 # Upload route (same as before)
 @app.post("/upload")
 async def upload_invoice(file: UploadFile = File(...), db: Session = Depends(get_db)):
