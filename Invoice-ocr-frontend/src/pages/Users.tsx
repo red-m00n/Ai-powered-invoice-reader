@@ -58,23 +58,50 @@ const Users = () => {
 
     setIsLoading(true);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("full_name", formData.fullName);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("password", formData.password);
+      formDataToSend.append("role", formData.role);
 
-    toast({
-      title: "User created successfully!",
-      description: `User ${formData.fullName} has been added to the system.`,
-    });
+      const response = await fetch("http://localhost:8000/auth/register", {
+        method: "POST",
+        body: formDataToSend,
+      });
 
-    setFormData({
-      fullName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      role: "user"
-    });
-    
-    setIsLoading(false);
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "User created successfully!",
+          description: `User ${data.user.full_name} has been added to the system.`,
+        });
+
+        setFormData({
+          fullName: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          role: "user"
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Failed to create user",
+          description: errorData.detail || "An error occurred while creating the user.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      toast({
+        title: "Failed to create user",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -114,6 +141,7 @@ const Users = () => {
                       value={formData.fullName}
                       onChange={handleChange}
                       required
+                      disabled={isLoading}
                       className="h-12 border-2 border-primary/20 focus:border-primary/50 bg-background/50"
                     />
                   </div>
@@ -128,6 +156,7 @@ const Users = () => {
                       value={formData.email}
                       onChange={handleChange}
                       required
+                      disabled={isLoading}
                       className="h-12 border-2 border-primary/20 focus:border-primary/50 bg-background/50"
                     />
                   </div>
@@ -144,6 +173,7 @@ const Users = () => {
                         onChange={handleChange}
                         required
                         minLength={6}
+                        disabled={isLoading}
                         className="h-12 border-2 border-primary/20 focus:border-primary/50 bg-background/50"
                       />
                       <Button
@@ -152,6 +182,7 @@ const Users = () => {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
+                        disabled={isLoading}
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
@@ -170,6 +201,7 @@ const Users = () => {
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         required
+                        disabled={isLoading}
                         className="h-12 border-2 border-primary/20 focus:border-primary/50 bg-background/50"
                       />
                       <Button
@@ -178,6 +210,7 @@ const Users = () => {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={isLoading}
                       >
                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </Button>
@@ -190,6 +223,7 @@ const Users = () => {
                       value={formData.role} 
                       onValueChange={handleRoleChange}
                       className="flex gap-6"
+                      disabled={isLoading}
                     >
                       <div className="flex items-center space-x-2">
                         <RadioGroupItem value="user" id="user" />

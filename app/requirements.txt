@@ -4,4 +4,8 @@ sqlalchemy>=1.4
 psycopg2-binary
 pdf2image
 Pillow
-openpyxl 
+openpyxl
+fastapi
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart 

@@ -1,18 +1,33 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { FileText, LayoutDashboard, Users, UserCheck } from "lucide-react";
+import { FileText, LayoutDashboard, Users, UserCheck, LogOut, User } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of your account.",
+    });
+    navigate("/login");
+  };
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   return (
     <nav className="border-b bg-card/50 backdrop-blur-md border-border/50 sticky top-0 z-50">
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           <div className="flex items-center space-x-12">
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link to="/upload" className="flex items-center space-x-3 group">
               <div className="p-2 rounded-xl gradient-primary shadow-primary group-hover:shadow-glow transition-all duration-300">
                 <FileText className="w-7 h-7 text-white" />
               </div>
@@ -22,12 +37,12 @@ const Navbar = () => {
             </Link>
             
             <div className="flex space-x-2">
-              <Link to="/">
+              <Link to="/upload">
                 <Button 
-                  variant={isActive("/") ? "default" : "ghost"}
+                  variant={isActive("/upload") ? "default" : "ghost"}
                   size="lg"
                   className={`flex items-center space-x-2 font-medium transition-all duration-300 ${
-                    isActive("/") 
+                    isActive("/upload") 
                       ? "gradient-primary shadow-primary text-white" 
                       : "hover:bg-primary/10 hover:text-primary"
                   }`}
@@ -82,6 +97,26 @@ const Navbar = () => {
                 </Button>
               </Link>
             </div>
+          </div>
+
+          {/* User info and logout */}
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <User className="w-4 h-4" />
+              <span>{user.full_name || "User"}</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                {user.role || "user"}
+              </span>
+            </div>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              size="sm"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-destructive"
+            >
+              <LogOut className="w-4 h-4" />
+              <span>Logout</span>
+            </Button>
           </div>
         </div>
       </div>

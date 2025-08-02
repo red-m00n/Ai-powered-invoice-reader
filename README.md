@@ -1,52 +1,122 @@
 # Invoice OCR Project
 
-Ce projet extrait le texte de factures PDF à l’aide de PaddleOCR, puis stocke le résultat dans une base PostgreSQL.
+A full-stack application for processing invoices using OCR technology with user authentication.
 
-## Structure
+## Features
 
-- `backend/` : Scripts Python (OCR, DB)
-- `uploads/` : Placez vos fichiers PDF ici (ex: `invoice_sample.pdf`)
-- `frontend/` : (Optionnel) Interface HTML
-- `README.md` : Ce fichier
+- **Invoice OCR Processing**: Extract text and data from uploaded invoices
+- **User Authentication**: Secure login system with JWT tokens
+- **User Management**: Create and manage users with different roles
+- **Dashboard**: View and manage processed invoices
+- **Modern UI**: Beautiful React frontend with Tailwind CSS
 
-## Installation
+## Project Structure
 
-1. Installez Python ≥ 3.8 et PostgreSQL.
-2. Créez la base et la table :
+```
+invoice-ocr-project/
+├── app/                    # Backend (FastAPI)
+│   ├── main.py            # Main FastAPI application
+│   ├── models.py          # Database models
+│   ├── auth.py            # Authentication utilities
+│   ├── db.py              # Database configuration
+│   ├── ocr_processor.py   # OCR processing logic
+│   ├── requirements.txt   # Python dependencies
+│   ├── create_tables.py   # Database initialization
+│   └── create_admin.py    # Admin user creation
+└── Invoice-ocr-frontend/  # Frontend (React + TypeScript)
+    ├── src/
+    │   ├── pages/         # React pages
+    │   ├── components/    # React components
+    │   └── ...
+    └── ...
+```
 
-   ```sql
-   CREATE DATABASE invoice_ocr_db;
-   \c invoice_ocr_db
-   CREATE TABLE invoices (
-       id SERIAL PRIMARY KEY,
-       filename VARCHAR(255) NOT NULL,
-       ocr_text TEXT NOT NULL,
-       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-   );
-   ```
+## Setup Instructions
 
-3. Installez les dépendances :
+### Backend Setup
 
-   ```sh
-   cd backend
+1. **Install Python dependencies**:
+   ```bash
+   cd app
    pip install -r requirements.txt
    ```
 
-4. Placez un PDF dans `uploads/` nommé `invoice_sample.pdf`.
+2. **Configure Database**:
+   - Make sure PostgreSQL is running
+   - Update database credentials in `app/db.py` if needed
+   - Create the database: `invoice_ocr_db`
 
-## Utilisation
+3. **Initialize Database**:
+   ```bash
+   cd app
+   python create_tables.py
+   python create_admin.py
+   ```
 
-```sh
-python main.py ../uploads/invoice_sample.pdf
-```
+4. **Start the Backend Server**:
+   ```bash
+   cd app
+   uvicorn main:app --reload --host 0.0.0.0 --port 8000
+   ```
 
-Le texte extrait s’affichera et sera inséré dans la base PostgreSQL.
+### Frontend Setup
 
-## Configuration
+1. **Install Node.js dependencies**:
+   ```bash
+   cd Invoice-ocr-frontend
+   npm install
+   ```
 
-Modifiez `db.py` si besoin pour vos identifiants PostgreSQL.
+2. **Start the Frontend Development Server**:
+   ```bash
+   cd Invoice-ocr-frontend
+   npm run dev
+   ```
 
----
+## Authentication
 
-**Prêt à l’emploi !**  
-N’oublie pas de placer un fichier `invoice_sample.pdf` dans `uploads/` avant de lancer le script. 
+### Default Admin User
+- **Email**: admin@example.com
+- **Password**: admin123
+
+### API Endpoints
+
+- `POST /auth/login` - User login
+- `POST /auth/register` - User registration
+- `GET /auth/me` - Get current user info
+
+### Frontend Routes
+
+- `/login` - Login page
+- `/dashboard` - Main dashboard (requires authentication)
+- `/users` - User management (admin only)
+
+## Usage
+
+1. Start both backend and frontend servers
+2. Navigate to `http://localhost:5173`
+3. Login with the default admin credentials
+4. Upload invoices and manage users
+
+## Security Notes
+
+- Change the `SECRET_KEY` in `app/auth.py` for production
+- Use environment variables for sensitive configuration
+- Implement proper password policies
+- Add rate limiting for production use
+
+## Technologies Used
+
+### Backend
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- PaddleOCR
+- JWT Authentication
+
+### Frontend
+- React
+- TypeScript
+- Tailwind CSS
+- Shadcn/ui Components
+- React Router 
