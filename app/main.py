@@ -181,6 +181,57 @@ def delete_invoice(invoice_id: int, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Invoice deleted"}
 
+# API: Edit an invoice
+@app.post("/edit/{invoice_id}")
+async def edit_invoice(invoice_id: int, request: Request, db: Session = Depends(get_db)):
+    """Edit an invoice"""
+    try:
+        form = await request.form()
+        invoice = db.query(Invoice).filter(Invoice.id == invoice_id).first()
+        
+        if not invoice:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Invoice not found"
+            )
+        
+        # Update invoice fields
+        if "filename" in form:
+            invoice.filename = form["filename"]
+        if "invoice_number" in form:
+            invoice.invoice_number = form["invoice_number"]
+        if "invoice_date" in form:
+            invoice.invoice_date = form["invoice_date"]
+        if "supplier_name" in form:
+            invoice.supplier_name = form["supplier_name"]
+        if "total_ht" in form:
+            try:
+                invoice.total_ht = float(form["total_ht"]) if form["total_ht"] else None
+            except ValueError:
+                invoice.total_ht = None
+        if "tva" in form:
+            try:
+                invoice.tva = float(form["tva"]) if form["tva"] else None
+            except ValueError:
+                invoice.tva = None
+        if "total_ttc" in form:
+            try:
+                invoice.total_ttc = float(form["total_ttc"]) if form["total_ttc"] else None
+            except ValueError:
+                invoice.total_ttc = None
+        
+        db.commit()
+        return {"message": "Invoice updated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update invoice: {str(e)}"
+        )
+
 # HTML serving routes (commented out since we're using React)
 # @app.get("/edit/{invoice_id}", response_class=HTMLResponse)
 # def edit_invoice_form(invoice_id: int, db: Session = Depends(get_db)):
