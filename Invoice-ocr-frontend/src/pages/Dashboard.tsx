@@ -10,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 // Mock data - replace with real data from your backend
 const mockInvoices = [
@@ -148,7 +150,7 @@ const Dashboard = () => {
             invoiceNumber: inv.invoice_number,
             invoiceDate: inv.invoice_date,
             supplierName: inv.supplier_name,
-            clientName: inv.client_name || "", // fallback if not present
+            clientName: inv.client_name || "",
             totalHT: Number(inv.total_ht),
             tva: Number(inv.tva),
             totalTTC: Number(inv.total_ttc),
@@ -206,11 +208,29 @@ const Dashboard = () => {
   };
 
   const exportToExcel = () => {
-    // In a real app, you'd use a library like xlsx
-    toast({
-      title: "Export to Excel",
-      description: "Excel file would be downloaded here.",
-    });
+    try {
+      const rows = filteredInvoices.map((inv: any) => ({
+        ID: inv.id,
+        Filename: inv.filename,
+        "Invoice Number": inv.invoiceNumber,
+        "Invoice Date": inv.invoiceDate,
+        "Supplier Name": inv.supplierName,
+        "Client Name": inv.clientName,
+        "Total HT": inv.totalHT,
+        TVA: inv.tva,
+        "Total TTC": inv.totalTTC,
+        "Created At": inv.createdAt,
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Invoices");
+      const wbout = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([wbout], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      saveAs(blob, "invoices.xlsx");
+      toast({ title: "Export successful", description: "Excel file has been downloaded." });
+    } catch (err) {
+      toast({ title: "Export failed", description: (err as Error).message, variant: "destructive" });
+    }
   };
 
   const exportToJson = () => {
