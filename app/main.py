@@ -3,8 +3,9 @@ from fastapi import FastAPI, Request, UploadFile, File, Depends, Form, HTTPExcep
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from app.db import SessionLocal
-from app.models import Invoice, User
+from app.db import SessionLocal, engine
+from app.models import Invoice, User, Base
+from sqlalchemy import text
 from app.ocr_processor import process_invoice_file
 from app.auth import authenticate_user, create_access_token, create_user, verify_token
 from datetime import timedelta
@@ -21,6 +22,36 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Ensure DB tables exist on startup and apply lightweight migrations
+Base.metadata.create_all(bind=engine)
+
+# Lightweight schema migration to add missing columns
+def ensure_invoices_schema():
+    try:
+        with engine.begin() as connection:
+            # Check processing_status column
+            result = connection.execute(
+                text(
+                    """
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name = 'invoices' AND column_name = 'processing_status'
+                    """
+                )
+            ).first()
+
+            if result is None:
+                connection.execute(
+                    text(
+                        "ALTER TABLE invoices ADD COLUMN processing_status VARCHAR(50) DEFAULT 'pending'"
+                    )
+                )
+    except Exception as e:
+        # Do not crash app on migration error; it will surface on queries
+        print(f"Schema ensure failed: {e}")
+
+ensure_invoices_schema()
 
 # Test endpoint to verify CORS is working
 @app.get("/test-cors")
@@ -166,7 +197,24 @@ async def upload_invoice(file: UploadFile = File(...), db: Session = Depends(get
 @app.get("/invoices")
 def get_all_invoices(db: Session = Depends(get_db)):
     invoices = db.query(Invoice).all()
-    return [invoice.__dict__ for invoice in invoices]
+    safe_invoices = []
+    for inv in invoices:
+        safe_invoices.append({
+            "id": inv.id,
+            "filename": inv.filename,
+            "invoice_number": inv.invoice_number,
+            # Convert date/datetime to ISO strings for the frontend
+            "invoice_date": inv.invoice_date.isoformat() if getattr(inv, "invoice_date", None) else None,
+            "supplier_name": inv.supplier_name,
+            # Convert Decimal to float for JSON safety
+            "total_ht": float(inv.total_ht) if getattr(inv, "total_ht", None) is not None else None,
+            "tva": float(inv.tva) if getattr(inv, "tva", None) is not None else None,
+            "total_ttc": float(inv.total_ttc) if getattr(inv, "total_ttc", None) is not None else None,
+            "ocr_text": inv.ocr_text,
+            "processing_status": inv.processing_status,
+            "created_at": inv.created_at.isoformat() if getattr(inv, "created_at", None) else None,
+        })
+    return safe_invoices
 
 
 

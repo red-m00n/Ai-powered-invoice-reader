@@ -1,11 +1,32 @@
-paddleocr==2.7.0.3
-paddlepaddle==2.4.2 ; sys_platform == "win32"
+# Core OCR and ML dependencies
+paddleocr>=2.7.0.3
+paddlepaddle>=2.5.1 ; sys_platform == "win32"
+transformers>=4.30.0
+torch>=2.0.0
+numpy>=1.24.0
+
+# Fine-tuning dependencies
+datasets>=2.14.0
+evaluate>=0.4.0
+tqdm>=4.65.0
+
+# Database and ORM
 sqlalchemy>=1.4
-psycopg2-binary
-pdf2image
-Pillow
-openpyxl
-fastapi
-python-jose[cryptography]
-passlib[bcrypt]
-python-multipart 
+psycopg2-binary>=2.9.0
+
+# File processing
+pdf2image>=1.17.0
+Pillow>=10.0.0
+openpyxl>=3.1.0
+
+# Web framework and API
+fastapi>=0.100.0
+uvicorn[standard]>=0.23.0
+
+# Authentication and security
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# Additional utilities
+python-dateutil>=2.8.0 

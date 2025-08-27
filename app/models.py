@@ -25,5 +25,6 @@ class Invoice(Base):
     tva = Column(Numeric(12, 2))
     total_ttc = Column(Numeric(12, 2))
     ocr_text = Column(Text)
+    processing_status = Column(String(50), default="pending")
     created_at = Column(DateTime(timezone=True), server_default=func.now()) 
 

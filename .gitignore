@@ -22,4 +22,13 @@ Thumbs.db
 
 # Uploads and generated files
 uploads/
+dataset/
 *.log
+
+# Virtual envs
+venv/
+.venv/
+env/
+
+# Model artifacts
+app/models/
